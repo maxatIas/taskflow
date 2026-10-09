@@ -1,0 +1,64 @@
+import { Schema, model, Document } from 'mongoose';
+
+export interface IUser extends Document {
+  email: string;
+  password: string;
+  username: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const UserSchema = new Schema<IUser>({
+  email: {
+    type: String,
+    required: [true, 'Email is required'],
+    unique: true,
+    trim: true,
+    lowercase: true,
+    match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email']
+  },
+  password: {
+    type: String,
+    required: [true, 'Password is required'],
+    minlength: [6, 'Password must be at least 6 characters']
+  },
+  username: {
+    type: String,
+    required: [true, 'Username is required'],
+    unique: true,
+    trim: true,
+    minlength: [3, 'Username must be at least 3 characters']
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+}, {
+  timestamps: true
+});
+
+// Hash password before saving
+UserSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  
+  try {
+    const bcrypt = await import('bcryptjs');
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (err) {
+    next(err as Error);
+  }
+});
+
+// Method to compare passwords
+UserSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+  const bcrypt = await import('bcryptjs');
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+export default model<IUser>('User', UserSchema);
