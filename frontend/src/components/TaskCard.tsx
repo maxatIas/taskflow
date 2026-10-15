@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Card, CardContent, Typography, Chip, Box, AvatarGroup, Avatar, IconButton, Menu, MenuItem } from '@mui/material';
+import { Card, CardContent, Typography, Chip, Box, AvatarGroup, Avatar, IconButton, Menu, MenuItem, ChipProps } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { Task, User } from '../types';
+import { Task, User, TaskPriority, TaskStatus } from '../types';
 import { useBoard } from '../hooks/useBoard';
 import { useAuth } from '../hooks/useAuth';
 
@@ -10,13 +10,13 @@ interface TaskCardProps {
   onEdit: (task: Task) => void;
 }
 
-const priorityColors = {
+const priorityColors: Record<TaskPriority, ChipProps['color']> = {
   low: 'success',
   medium: 'warning',
   high: 'error'
 };
 
-const statusColors = {
+const statusColors: Record<TaskStatus, ChipProps['color']> = {
   'todo': 'secondary',
   'in-progress': 'primary',
   'done': 'success'

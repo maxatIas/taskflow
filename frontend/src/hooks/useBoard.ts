@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Board, Task, TaskStatus, ApiResponse } from '../types';
+import { Board, Task, TaskStatus } from '../types';
 import { BoardApi, TaskApi } from '../services/api';
 import { useAuth } from './useAuth';
 
@@ -20,7 +20,7 @@ export const organizeTasksByStatus = (tasks: Task[]): Record<TaskStatus, Task[]>
 
 // Custom hook for board operations
 export const useBoard = (boardId?: string) => {
-  const { token, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [boards, setBoards] = useState<Board[]>([]);
   const [currentBoard, setCurrentBoard] = useState<Board | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -86,8 +86,8 @@ export const useBoard = (boardId?: string) => {
       
       if (response.status === 'success' && response.data?.board) {
         // Add new board to boards list
-        setBoards(prev => [...prev, response.data.board]);
-        return response.data.board;
+        setBoards(prev => [...prev, response.data!.board]);
+        return response.data!.board;
       }
       return null;
     } catch (err: any) {
@@ -112,16 +112,16 @@ export const useBoard = (boardId?: string) => {
         // Update board in boards list
         setBoards(prev => 
           prev.map(board => 
-            board._id === id ? response.data.board : board
+            board._id === id ? response.data!.board : board
           )
         );
         
         // Update current board if it's the one being edited
         if (currentBoard?._id === id) {
-          setCurrentBoard(response.data.board);
+          setCurrentBoard(response.data!.board);
         }
         
-        return response.data.board;
+        return response.data!.board;
       }
       return null;
     } catch (err: any) {
@@ -182,16 +182,16 @@ export const useBoard = (boardId?: string) => {
         // Update board in boards list
         setBoards(prev => 
           prev.map(board => 
-            board._id === boardId ? response.data.board : board
+            board._id === boardId ? response.data!.board : board
           )
         );
         
         // Update current board if it's the one being edited
         if (currentBoard?._id === boardId) {
-          setCurrentBoard(response.data.board);
+          setCurrentBoard(response.data!.board);
         }
         
-        return response.data.board;
+        return response.data!.board;
       }
       return null;
     } catch (err: any) {
@@ -216,16 +216,16 @@ export const useBoard = (boardId?: string) => {
         // Update board in boards list
         setBoards(prev => 
           prev.map(board => 
-            board._id === boardId ? response.data.board : board
+            board._id === boardId ? response.data!.board : board
           )
         );
         
         // Update current board if it's the one being edited
         if (currentBoard?._id === boardId) {
-          setCurrentBoard(response.data.board);
+          setCurrentBoard(response.data!.board);
         }
         
-        return response.data.board;
+        return response.data!.board;
       }
       return null;
     } catch (err: any) {
@@ -257,7 +257,7 @@ export const useBoard = (boardId?: string) => {
       const response = await TaskApi.create(boardId, taskData);
       
       if (response.status === 'success' && response.data?.task) {
-        const newTask = response.data.task;
+        const newTask = response.data!.task;
         
         // Add task to tasks list
         setTasks(prev => [...prev, newTask]);
@@ -301,7 +301,7 @@ export const useBoard = (boardId?: string) => {
       const response = await TaskApi.update(taskId, updates);
       
       if (response.status === 'success' && response.data?.task) {
-        const updatedTask = response.data.task;
+        const updatedTask = response.data!.task;
         
         // Update task in tasks list
         setTasks(prev => 
@@ -336,7 +336,7 @@ export const useBoard = (boardId?: string) => {
       const response = await TaskApi.updateStatus(taskId, newStatus);
       
       if (response.status === 'success' && response.data?.task) {
-        const updatedTask = response.data.task;
+        const updatedTask = response.data!.task;
         
         // Update task in tasks list
         setTasks(prev => 

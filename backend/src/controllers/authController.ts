@@ -1,7 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
-import User from '../models/User';
+import User, { IUser } from '../models/User';
 import { generateToken } from '../middlewares/auth';
 import { CustomError } from '../middlewares/errorHandler';
+
+// Extend IUser with the comparePassword method
+declare module '../models/User' {
+  interface IUser {
+    comparePassword(candidatePassword: string): Promise<boolean>;
+  }
+}
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -24,9 +31,9 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     // Generate token
     const token = generateToken(user._id.toString());
     
-    // Remove password from response
+    // Create user object without password
     const userWithoutPassword = user.toObject();
-    delete userWithoutPassword.password;
+    const { password: _, ...userData } = userWithoutPassword;
     
     // Set cookie
     res.cookie('token', token, {
@@ -40,7 +47,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       status: 'success',
       token,
       data: {
-        user: userWithoutPassword
+        user: userData
       }
     });
   } catch (err) {
@@ -56,7 +63,9 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const { email, password } = req.body;
     
     // Check for user
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select('+password') as IUser & {
+      comparePassword: (password: string) => Promise<boolean>;
+    };
     
     if (!user) {
       const error: CustomError = new Error('Invalid credentials');
@@ -65,7 +74,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     }
     
     // Check password
-    const isMatch = await user.comparePassword(password);
+    const isMatch = await (user as any).comparePassword(password);
     
     if (!isMatch) {
       const error: CustomError = new Error('Invalid credentials');
@@ -76,9 +85,9 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     // Generate token
     const token = generateToken(user._id.toString());
     
-    // Remove password from response
+    // Create user object without password
     const userWithoutPassword = user.toObject();
-    delete userWithoutPassword.password;
+    const { password: _, ...userData } = userWithoutPassword;
     
     // Set cookie
     res.cookie('token', token, {
@@ -92,7 +101,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       status: 'success',
       token,
       data: {
-        user: userWithoutPassword
+        user: userData
       }
     });
   } catch (err) {

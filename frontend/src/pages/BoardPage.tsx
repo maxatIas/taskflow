@@ -6,10 +6,8 @@ import {
   Button,
   Paper,
   IconButton,
-  TextField,
   AvatarGroup,
   Avatar,
-  Chip,
   Tooltip,
   Alert
 } from '@mui/material';
@@ -21,11 +19,11 @@ import {
 } from '@mui/icons-material';
 import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import { restrictToParentElement } from '@dnd-kit/modifiers';
-import { useBoard, organizeTasksByStatus } from '../hooks/useBoard';
+import { useBoard } from '../hooks/useBoard';
 import { useAuth } from '../hooks/useAuth';
 import Column from '../components/Column';
 import TaskForm from '../components/TaskForm';
-import { Task, Board, TaskStatus } from '../types';
+import { Task, TaskStatus } from '../types';
 
 const BoardPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -38,9 +36,7 @@ const BoardPage: React.FC = () => {
     loading,
     error,
     fetchBoard,
-    createTask,
-    updateTaskStatus,
-    deleteTask: deleteTaskFromBoard
+    updateTaskStatus
   } = useBoard(id);
 
   const [openTaskForm, setOpenTaskForm] = useState(false);

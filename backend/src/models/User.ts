@@ -1,4 +1,4 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model, Document, Model } from 'mongoose';
 
 export interface IUser extends Document {
   email: string;
@@ -6,6 +6,12 @@ export interface IUser extends Document {
   username: string;
   createdAt: Date;
   updatedAt: Date;
+  comparePassword(candidatePassword: string): Promise<boolean>;
+}
+
+// Extend the Model interface to include statics
+interface IUserModel extends Model<IUser> {
+  // Add static methods here if needed
 }
 
 const UserSchema = new Schema<IUser>({

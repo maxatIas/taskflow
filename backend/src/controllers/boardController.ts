@@ -1,8 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
-import Board from '../models/Board';
+import Board, { IBoard } from '../models/Board';
 import Task from '../models/Task';
 import User from '../models/User';
 import { CustomError } from '../middlewares/errorHandler';
+import { Types, Document } from 'mongoose';
+
+// Type for Board document with proper population support
+interface IBoardDocument extends IBoard, Document {
+  members: Types.ObjectId[];
+}
+
+// Helper function to populate board
+const populateBoard = async (boardId: string): Promise<IBoard | null> => {
+  return await Board.findById(boardId)
+    .populate('createdBy', 'username email')
+    .populate('members', 'username email');
+};
 
 // @desc    Get all boards for current user
 // @route   GET /api/boards
@@ -60,7 +73,7 @@ export const getBoard = async (req: Request, res: Response, next: NextFunction) 
     // Check if user has access to this board
     const userId = req.user?.id;
     const hasAccess = board.createdBy.toString() === userId || 
-                     board.members.some(member => member.toString() === userId);
+                     (board.members as any[]).some(member => member.toString() === userId);
     
     if (!hasAccess) {
       const error: CustomError = new Error('Not authorized to access this board');
@@ -100,13 +113,13 @@ export const createBoard = async (req: Request, res: Response, next: NextFunctio
       createdBy: userId
     });
     
-    // Populate createdBy
-    await board.populate('createdBy', 'username email');
+    // Populate and return
+    const populatedBoard = await populateBoard(board._id);
     
     res.status(201).json({
       status: 'success',
       data: {
-        board
+        board: populatedBoard
       }
     });
   } catch (err) {
@@ -144,12 +157,12 @@ export const updateBoard = async (req: Request, res: Response, next: NextFunctio
     await board.save();
     
     // Populate and return
-    await board.populate('createdBy', 'username email').populate('members', 'username email');
+    const populatedBoard = await populateBoard(board._id);
     
     res.status(200).json({
       status: 'success',
       data: {
-        board
+        board: populatedBoard
       }
     });
   } catch (err) {
@@ -199,7 +212,7 @@ export const deleteBoard = async (req: Request, res: Response, next: NextFunctio
 // @access  Private
 export const addMember = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { userId } = req.body;
+    const { userId: newMemberId } = req.body;
     const currentUserId = req.user?.id;
     
     const board = await Board.findById(req.params.id);
@@ -218,7 +231,7 @@ export const addMember = async (req: Request, res: Response, next: NextFunction)
     }
     
     // Check if user exists
-    const user = await User.findById(userId);
+    const user = await User.findById(newMemberId);
     if (!user) {
       const error: CustomError = new Error('User not found');
       error.statusCode = 404;
@@ -226,23 +239,28 @@ export const addMember = async (req: Request, res: Response, next: NextFunction)
     }
     
     // Check if user is already a member
-    if (board.members.some(member => member.toString() === userId)) {
+    const members = board.members as Types.ObjectId[];
+    const isAlreadyMember = members.some(
+      (member) => member.toString() === newMemberId
+    );
+    
+    if (isAlreadyMember) {
       const error: CustomError = new Error('User is already a member of this board');
       error.statusCode = 400;
       return next(error);
     }
     
     // Add member
-    board.members.push(userId);
+    members.push(newMemberId as Types.ObjectId);
     await board.save();
     
     // Populate and return
-    await board.populate('createdBy', 'username email').populate('members', 'username email');
+    const populatedBoard = await populateBoard(board._id);
     
     res.status(200).json({
       status: 'success',
       data: {
-        board
+        board: populatedBoard
       }
     });
   } catch (err) {
@@ -280,20 +298,21 @@ export const removeMember = async (req: Request, res: Response, next: NextFuncti
       return next(error);
     }
     
-    // Remove member
-    board.members = board.members.filter(
-      member => member.toString() !== memberId
-    );
+    // Remove member - filter out the memberId
+    const members = board.members as Types.ObjectId[];
+    board.members = members.filter(
+      (member) => member.toString() !== memberId
+    ) as Types.ObjectId[];
     
     await board.save();
     
     // Populate and return
-    await board.populate('createdBy', 'username email').populate('members', 'username email');
+    const populatedBoard = await populateBoard(board._id);
     
     res.status(200).json({
       status: 'success',
       data: {
-        board
+        board: populatedBoard
       }
     });
   } catch (err) {

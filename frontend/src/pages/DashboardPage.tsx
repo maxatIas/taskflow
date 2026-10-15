@@ -9,7 +9,6 @@ import {
   Card,
   CardContent,
   CardActions,
-  IconButton,
   TextField,
   Dialog,
   DialogTitle,
@@ -17,7 +16,7 @@ import {
   DialogActions,
   Alert
 } from '@mui/material';
-import { Add as AddIcon, Logout as LogoutIcon, Search as SearchIcon } from '@mui/icons-material';
+import { Add as AddIcon, Logout as LogoutIcon } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
 import { useBoard } from '../hooks/useBoard';
 import { Board } from '../types';

@@ -1,11 +1,10 @@
 import { Schema, model, Document, Types } from 'mongoose';
-import { IUser } from './User';
 
 export interface IBoard extends Document {
   name: string;
   description: string;
-  createdBy: Types.ObjectId | IUser;
-  members: Types.ObjectId[] | IUser[];
+  createdBy: Types.ObjectId;
+  members: Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,7 +36,12 @@ const BoardSchema = new Schema<IBoard>({
 
 // Add createdBy to members array before saving
 BoardSchema.pre('save', function(next) {
-  if (!this.members.includes(this.createdBy)) {
+  // Use string comparison and ignore TypeScript type issues
+  // @ts-ignore
+  const hasCreatedByInMembers = this.members.some(m => m.toString() === this.createdBy.toString());
+  
+  if (!hasCreatedByInMembers) {
+    // @ts-ignore
     this.members.push(this.createdBy);
   }
   next();

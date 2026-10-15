@@ -12,14 +12,14 @@ import {
   Autocomplete,
   FormControl,
   InputLabel,
-  Select
+  Select,
+  Typography
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { Task, TaskPriority, TaskStatus, User } from '../types';
 import { useBoard } from '../hooks/useBoard';
-import { useAuth } from '../hooks/useAuth';
 
 interface TaskFormProps {
   open: boolean;
@@ -42,7 +42,6 @@ const statusOptions = [
 
 const TaskForm: React.FC<TaskFormProps> = ({ open, onClose, task, boardId }) => {
   const { createTask, updateTask } = useBoard();
-  const { user } = useAuth();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -103,7 +102,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ open, onClose, task, boardId }) => 
           status: formData.status,
           tags: formData.tags,
           assignedTo: formData.assignedTo.map(u => u._id),
-          dueDate: formData.dueDate
+          dueDate: formData.dueDate || undefined
         });
       } else {
         // Create new task
@@ -113,7 +112,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ open, onClose, task, boardId }) => 
           priority: formData.priority,
           tags: formData.tags,
           assignedTo: formData.assignedTo.map(u => u._id),
-          dueDate: formData.dueDate
+          dueDate: formData.dueDate || undefined
         });
       }
       
@@ -213,7 +212,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ open, onClose, task, boardId }) => 
                 value.map((option, index) => (
                   <Chip 
                     label={option.username} 
-                    key={option._id} 
                     {...getTagProps({ index })}
                   />
                 ))
@@ -238,7 +236,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ open, onClose, task, boardId }) => 
                 value.map((option, index) => (
                   <Chip 
                     label={option} 
-                    key={index} 
                     {...getTagProps({ index })}
                   />
                 ))
